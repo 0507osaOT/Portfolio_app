@@ -194,7 +194,8 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
                     fontWeight: 'bold',
                     fontSize: '31px',
                     color: '#333',
-                    backgroundColor: '#f8f9fa'
+                    backgroundColor: '#f8f9fa',
+                    whiteSpace: 'nowrap'
                   }}>商品名</th>
                   <th style={{
                     padding: '26px',
@@ -202,7 +203,8 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
                     fontWeight: 'bold',
                     fontSize: '31px',
                     color: '#333',
-                    backgroundColor: '#f8f9fa'
+                    backgroundColor: '#f8f9fa',
+                    whiteSpace: 'nowrap'
                   }}>個数</th>
                   <th style={{
                     padding: '26px',
@@ -210,7 +212,8 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
                     fontWeight: 'bold',
                     fontSize: '31px',
                     color: '#333',
-                    backgroundColor: '#f8f9fa'
+                    backgroundColor: '#f8f9fa',
+                    whiteSpace: 'nowrap' 
                   }}>追加日</th>
                   <th style={{
                     padding: '26px',
@@ -218,7 +221,8 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
                     fontWeight: 'bold',
                     fontSize: '31px',
                     color: '#333',
-                    backgroundColor: '#f8f9fa'
+                    backgroundColor: '#f8f9fa',
+                    whiteSpace: 'nowrap'  
                   }}>種類</th>
                   <th style={{
                     padding: '26px',
@@ -226,7 +230,8 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
                     fontWeight: 'bold',
                     fontSize: '31px',
                     color: '#333',
-                    backgroundColor: '#f8f9fa'
+                    backgroundColor: '#f8f9fa',
+                    whiteSpace: 'nowrap'  
                   }}>操作</th>
                 </tr>
               </thead>
