@@ -23,7 +23,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// useAuth フックをエクスポート
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -78,6 +77,10 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = () => {
     setCurrentUser(null);
     localStorage.removeItem('currentUser');
+    // データは削除しない（残したい場合）
+    // もしログアウト時にデータも削除したい場合は以下を追加
+    // localStorage.removeItem('items');
+    // localStorage.removeItem('newFormState');
   };
 
   return (
@@ -102,16 +105,50 @@ export interface Item {
 }
 
 // ========================================
+// localStorageを使うカスタムフック
+// ========================================
+
+function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
+  // 初期値をlocalStorageから取得
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.error(error);
+      return initialValue;
+    }
+  });
+
+  // 値を更新してlocalStorageに保存
+  const setValue = (value: T | ((val: T) => T)) => {
+    try {
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+      window.localStorage.setItem(key, JSON.stringify(valueToStore));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return [storedValue, setValue];
+}
+
+// ========================================
 // メインApp（認証統合版）
 // ========================================
 
 function AppContent() {
   const { currentUser, logout } = useAuth();
   const [currentPage, setCurrentPage] = useState<'home' | 'new' | 'calendar' | 'stock'>('home'); 
-  const [items, setItems] = useState<Item[]>([]);
+  
+  // localStorageを使ってitemsを保存
+  const [items, setItems] = useLocalStorage<Item[]>('items', []);
+  
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   
-  const [newFormState, setNewFormState] = useState({
+  // newFormStateもlocalStorageに保存
+  const [newFormState, setNewFormState] = useLocalStorage('newFormState', {
     newAddedItems: [] as Array<{genre: string, name: string, quantity: string, barcode: string}>,
     historyAddedItems: [] as Array<{genre: string, name: string, quantity: string, barcode: string}>,
     itemHistory: [] as Array<{genre: string, name: string}>
@@ -121,6 +158,13 @@ function AppContent() {
     if (window.confirm('ログアウトしますか？')) {
       logout();
       setShowSettingsModal(false);
+      // ログアウト時にデータも削除したい場合は以下のコメントを解除
+      // setItems([]);
+      // setNewFormState({
+      //   newAddedItems: [],
+      //   historyAddedItems: [],
+      //   itemHistory: []
+      // });
     }
   };
 

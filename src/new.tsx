@@ -62,11 +62,11 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
   const [message, setMessage] = useState("");
   const [showNotification, setShowNotification] = useState(false);
   const [isZxingLoaded, setIsZxingLoaded] = useState(false);
+  const isProcessingRef = useRef(false);  // stateではなくrefに変更
   const videoRef = useRef<HTMLVideoElement>(null);
   const codeReaderRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const lastScannedRef = useRef<string>("");
-  const lastScanTimeRef = useRef<number>(0);
 
   const showMessage = useCallback((msg: string) => {
     setMessage(msg);
@@ -115,13 +115,21 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
 
   const stopScan = useCallback(() => {
     if (codeReaderRef.current && typeof codeReaderRef.current.reset === 'function') {
-      codeReaderRef.current.reset();
+      try {
+        codeReaderRef.current.reset();
+      } catch (e) {
+        console.error('Reset error:', e);
+      }
     }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
     setIsScanning(false);
+    isProcessingRef.current = false; 
+    lastScannedRef.current = "";
+    // バーコードフィールドもクリア
+    setNewItem(prev => ({ ...prev, barcode: '' }));
   }, []);
 
   useEffect(() => {
@@ -129,23 +137,21 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
   }, [stopScan]);
 
   const fetchProductInfo = async (barcode: string) => {
+    if (isProcessingRef.current) return;
+    isProcessingRef.current = true; 
+    
     try {
       showMessage(`バーコード: ${barcode} の商品情報を検索中...`);
       
-      // 楽天APIのアプリケーションIDをここに入力してください
-      const RAKUTEN_APP_ID = '1079745700222105770'; // ← 取得したアプリケーションID
+      const RAKUTEN_APP_ID = '1079745700222105770';
       
       if (!RAKUTEN_APP_ID) {
         showMessage('楽天アプリケーションIDが設定されていません');
-        handleNewItemChange("name", `商品コード: ${barcode}`);
-        handleNewItemChange("genre", "未分類");
+        setNewItem(prev => ({ ...prev, name: `商品コード: ${barcode}`, genre: "未分類" }));
         stopScan();
-        lastScannedRef.current = "";
-        lastScanTimeRef.current = 0;
         return;
       }
       
-      // 楽天商品検索API
       const rakutenUrl = `https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?format=json&keyword=${barcode}&applicationId=${RAKUTEN_APP_ID}`;
       const response = await fetch(rakutenUrl);
       const data = await response.json();
@@ -155,54 +161,40 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
         const productName = item.itemName || "不明な商品";
         const genre = item.genreId ? `楽天カテゴリ${item.genreId}` : "一般商品";
         
-        handleNewItemChange("name", productName);
-        handleNewItemChange("genre", genre);
+        setNewItem(prev => ({ ...prev, name: productName, genre: genre }));
         showMessage(`楽天から商品情報を取得しました！`);
         stopScan();
-        lastScannedRef.current = "";
-        lastScanTimeRef.current = 0;
         return;
       }
       
-      // 楽天で見つからない場合、Open Food Factsを試す
       const offResponse = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
       const offData = await offResponse.json();
       
       if (offData.status === 1) {
         const productName = offData.product.product_name || "不明な商品";
         const genre = (offData.product.categories?.split(",")[0].trim() || "食品");
-        handleNewItemChange("name", productName);
-        handleNewItemChange("genre", genre);
+        setNewItem(prev => ({ ...prev, name: productName, genre: genre }));
         showMessage(`Open Food Factsから商品情報を取得しました`);
         stopScan();
-        lastScannedRef.current = "";
-        lastScanTimeRef.current = 0;
         return;
       }
       
-      // どちらでも見つからない場合
       showMessage(`商品が見つかりませんでした。手動で入力してください`);
       stopScan();
-      lastScannedRef.current = "";
-      lastScanTimeRef.current = 0;
       
     } catch (error) {
       console.error('API Error:', error);
       showMessage("商品情報取得エラー。手動で入力してください");
       stopScan();
-      lastScannedRef.current = "";
-      lastScanTimeRef.current = 0;
     }
   };
 
   const startScan = useCallback(async () => {
-    if (isScanning || !isZxingLoaded) return;
-
-    // スキャン開始時に必ずバーコードをクリア
+    if (isScanning || !isZxingLoaded || isProcessingRef.current) return;
+    
     setNewItem(prev => ({ ...prev, barcode: '' }));
-    // スキャン開始時にリセット
     lastScannedRef.current = "";
-    lastScanTimeRef.current = 0;
+    isProcessingRef.current = false; 
     
     try {
       const ZXingClass = (window as any).ZXing?.BrowserMultiFormatReader || (window as any).BrowserMultiFormatReader;
@@ -238,27 +230,26 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
       ) || videoInputDevices[0];
 
       codeReaderRef.current.decodeFromVideoDevice(rearCamera.deviceId, videoRef.current, (result: any) => {
-        if (result) {
-          const code = result.getText();
-
-          // コードが空の場合は処理しない
-          if (!code) {
-            return;
-          }
-
-          const now = Date.now();
-          
-          // 同じバーコードを2秒以内に再度読み取らない
-          if (code === lastScannedRef.current && now - lastScanTimeRef.current < 2000) {
-            return;
-          }
-          
-          lastScannedRef.current = code;
-          lastScanTimeRef.current = now;
-          handleNewItemChange("barcode", code);
-          fetchProductInfo(code);
-        }
+        // 結果がない、またはすでに処理中の場合はスキップ
+        if (!result) return;
+        if (isProcessingRef.current) return;
+        
+        const code = result.getText();
+        
+        // コードが空、または前回と同じ場合はスキップ
+        if (!code) return;
+        if (code === lastScannedRef.current) return;
+        
+        // 新しいバーコードとして記録
+        lastScannedRef.current = code;
+        
+        // バーコードフィールドを更新
+        setNewItem(prev => ({ ...prev, barcode: code }));
+        
+        // 商品情報を取得
+        fetchProductInfo(code);
       });
+
     } catch {
       setIsScanning(false);
       showMessage("カメラへのアクセスに失敗しました");
@@ -287,11 +278,8 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
     }
     updateNewFormState({ newAddedItems: [...newAddedItems, { ...newItem, quantity: String(quantity) }] });
     
-    // ここを修正：リセットの順序を変更
-    stopScan(); // 最初にスキャンを停止
-    lastScannedRef.current = ""; // 履歴をリセット
-    lastScanTimeRef.current = 0;
-    setNewItem({ genre: '', name: '', quantity: '1', barcode: '' }); // 最後にフィールドをクリア
+    stopScan();
+    setNewItem({ genre: '', name: '', quantity: '1', barcode: '' });
     
     showMessage('項目を追加しました');
   };
@@ -488,7 +476,7 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
                         <span style={{ color: '#666', fontSize: '20px' }}>({item.quantity}個)</span>
                       </div>
                       <button onClick={() => updateNewFormState({ historyAddedItems: historyAddedItems.filter((_, i) => i !== item.originalIndex) })} style={{ padding: '12px 24px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '18px', fontWeight: 'bold' }}>
-                        <TrashIcon /> 削除
+                      <TrashIcon /> 削除
                       </button>
                     </div>
                   ))}
