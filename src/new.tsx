@@ -119,21 +119,36 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
   }, [showMessage]);
 
   const stopScan = useCallback(() => {
-    if (codeReaderRef.current && typeof codeReaderRef.current.reset === 'function') {
+    // codeReaderを完全に破棄
+    if (codeReaderRef.current) {
       try {
-        codeReaderRef.current.reset();
+        if (typeof codeReaderRef.current.reset === 'function') {
+          codeReaderRef.current.reset();
+        }
+        // デコード処理を完全に停止
+        if (typeof codeReaderRef.current.stopContinuousDecode === 'function') {
+          codeReaderRef.current.stopContinuousDecode();
+        }
+        // codeReaderを完全にクリア
+        codeReaderRef.current = null;
       } catch (e) {
         console.error('Reset error:', e);
       }
     }
+    
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
+    
+    // videoのsrcObjectもクリア
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    
     setIsScanning(false);
     isProcessingRef.current = false; 
     lastScannedRef.current = "";
-    setNewItem(prev => ({ ...prev, barcode: '' }));
   }, []);
 
   useEffect(() => {
@@ -142,7 +157,7 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
 
   const fetchProductInfo = async (barcode: string) => {
     if (isProcessingRef.current) return;
-    isProcessingRef.current = true; 
+    isProcessingRef.current = true;
     
     try {
       showMessage(`バーコード: ${barcode} の商品情報を検索中...`);
@@ -152,7 +167,6 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
       if (!RAKUTEN_APP_ID) {
         showMessage('楽天アプリケーションIDが設定されていません');
         setNewItem(prev => ({ ...prev, name: `商品コード: ${barcode}`, genre: "未分類" }));
-        stopScan();
         return;
       }
       
@@ -167,7 +181,6 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
         
         setNewItem(prev => ({ ...prev, name: productName, genre: genre }));
         showMessage(`楽天から商品情報を取得しました！`);
-        stopScan();
         return;
       }
       
@@ -179,16 +192,15 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
         const genre = (offData.product.categories?.split(",")[0].trim() || "食品");
         setNewItem(prev => ({ ...prev, name: productName, genre: genre }));
         showMessage(`Open Food Factsから商品情報を取得しました`);
-        stopScan();
         return;
       }
       
       showMessage(`商品が見つかりませんでした。手動で入力してください`);
-      stopScan();
       
     } catch (error) {
       console.error('API Error:', error);
       showMessage("商品情報取得エラー。手動で入力してください");
+    } finally {
       stopScan();
     }
   };
@@ -196,9 +208,29 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
   const startScan = useCallback(async () => {
     if (isScanning || !isZxingLoaded || isProcessingRef.current) return;
     
+    // 前回の状態を完全にクリア
+    if (codeReaderRef.current) {
+      try {
+        if (typeof codeReaderRef.current.reset === 'function') {
+          codeReaderRef.current.reset();
+        }
+        if (typeof codeReaderRef.current.stopContinuousDecode === 'function') {
+          codeReaderRef.current.stopContinuousDecode();
+        }
+      } catch (e) {
+        console.error('Cleanup error:', e);
+      }
+      codeReaderRef.current = null;
+    }
+    
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    
     setNewItem(prev => ({ ...prev, barcode: '' }));
     lastScannedRef.current = "";
-    isProcessingRef.current = false; 
+    isProcessingRef.current = false;
     
     try {
       const ZXingClass = (window as any).ZXing?.BrowserMultiFormatReader || (window as any).BrowserMultiFormatReader;
@@ -210,9 +242,8 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
       setIsScanning(true);
       showMessage("バーコードをスキャン中...");
       
-      if (!codeReaderRef.current) {
-        codeReaderRef.current = new ZXingClass();
-      }
+      // 新しいインスタンスを作成
+      codeReaderRef.current = new ZXingClass();
 
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       streamRef.current = stream;
@@ -233,7 +264,12 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
         device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('environment')
       ) || videoInputDevices[0];
 
-      codeReaderRef.current.decodeFromVideoDevice(rearCamera.deviceId, videoRef.current, (result: any) => {
+      codeReaderRef.current.decodeFromVideoDevice(rearCamera.deviceId, videoRef.current, (result: any, error: any) => {
+        // エラーがある場合は無視（スキャン中の正常なエラー）
+        if (error && error.name !== 'NotFoundException') {
+          return;
+        }
+        
         if (!result) return;
         if (isProcessingRef.current) return;
         
@@ -247,8 +283,10 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
         fetchProductInfo(code);
       });
 
-    } catch {
+    } catch (error) {
+      console.error('Start scan error:', error);
       setIsScanning(false);
+      isProcessingRef.current = false;
       showMessage("カメラへのアクセスに失敗しました");
     }
   }, [isScanning, isZxingLoaded, showMessage, stopScan]);
@@ -332,7 +370,6 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
   const groupedNewItems = groupItemsByGenre(newAddedItems);
   const groupedHistoryItems = groupItemsByGenre(historyAddedItems);
 
-  // デバッグ用useEffect（uniqueGenresの定義後に配置）
   useEffect(() => {
   }, [itemHistory, localItemHistory, uniqueGenres]);
 
@@ -471,43 +508,43 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
               <button onClick={() => { const q = parseInt(historyItem.quantity) || 0; handleHistoryItemChange('quantity', String(q + 1)); }} className="btn-icon-round" style={{ background: '#000' }}><PlusIcon /></button>
               <input type="number" value={historyItem.quantity} onChange={(e) => handleHistoryItemChange('quantity', e.target.value)} className="input-field quantity-input" />
               <button onClick={() => { const q = parseInt(historyItem.quantity) || 0; if (q > 1) handleHistoryItemChange('quantity', String(q - 1)); }} className="btn-icon-round" style={{ background: '#dc3545' }} disabled={(parseInt(historyItem.quantity) || 0) <= 1}><MinusIcon /></button>
-            </div>
-          </div>
-        </div>
-        <div style={{ textAlign: 'center', marginTop: '45px' }}>
-          <button onClick={handleHistoryItemSubmit} className="btn-primary btn-submit" disabled={!historyItem.name || !historyItem.genre || (parseInt(historyItem.quantity) || 0) <= 0}>
-            ＋ 項目を追加リストへ
-          </button>
-          </div>
-        {historyAddedItems.length > 0 && (
-          <div style={{ marginTop: '50px' }}>
-            <h4 style={{ fontSize: '30px', fontWeight: 'bold', marginBottom: '25px', color: '#333' }}>履歴追加予定の商品 ({historyAddedItems.length}件)</h4>
-            <div style={{ background: '#f8f9fa', padding: '30px', borderRadius: '12px' }}>
-              {Object.entries(groupedHistoryItems).map(([genre, items]) => (
-                <div key={genre} style={{ marginBottom: '30px' }}>
-                  <div style={{ fontSize: '26px', fontWeight: 'bold', marginBottom: '20px', color: '#6c757d', borderLeft: '5px solid #6c757d', paddingLeft: '15px' }}>{genre}</div>
-                  {(items as Array<Item & { originalIndex: number }>).map((item) => (
-                    <div key={item.originalIndex} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '22px 28px', marginBottom: '12px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                      <div style={{ display: 'flex', gap: '35px', flex: 1, alignItems: 'center' }}>
-                        <span style={{ fontWeight: 'bold', fontSize: '22px', color: '#333' }}>{item.name}</span>
-                        <span style={{ color: '#666', fontSize: '20px' }}>({item.quantity}個)</span>
-                      </div>
-                      <button onClick={() => updateNewFormState({ historyAddedItems: historyAddedItems.filter((_, i) => i !== item.originalIndex) })} className="btn-delete">
-                        <TrashIcon /> 削除
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ))}
-              <div style={{ textAlign: 'center', marginTop: '35px' }}>
-                <button onClick={handleHistoryBatchSubmit} className="btn-primary btn-batch-submit">全てまとめて登録</button>
               </div>
             </div>
           </div>
-        )}
+          <div style={{ textAlign: 'center', marginTop: '45px' }}>
+            <button onClick={handleHistoryItemSubmit} className="btn-primary btn-submit" disabled={!historyItem.name || !historyItem.genre || (parseInt(historyItem.quantity) || 0) <= 0}>
+              ＋ 項目を追加リストへ
+            </button>
+          </div>
+          {historyAddedItems.length > 0 && (
+            <div style={{ marginTop: '50px' }}>
+              <h4 style={{ fontSize: '30px', fontWeight: 'bold', marginBottom: '25px', color: '#333' }}>履歴追加予定の商品 ({historyAddedItems.length}件)</h4>
+              <div style={{ background: '#f8f9fa', padding: '30px', borderRadius: '12px' }}>
+                {Object.entries(groupedHistoryItems).map(([genre, items]) => (
+                  <div key={genre} style={{ marginBottom: '30px' }}>
+                    <div style={{ fontSize: '26px', fontWeight: 'bold', marginBottom: '20px', color: '#6c757d', borderLeft: '5px solid #6c757d', paddingLeft: '15px' }}>{genre}</div>
+                    {(items as Array<Item & { originalIndex: number }>).map((item) => (
+                      <div key={item.originalIndex} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '22px 28px', marginBottom: '12px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                        <div style={{ display: 'flex', gap: '35px', flex: 1, alignItems: 'center' }}>
+                          <span style={{ fontWeight: 'bold', fontSize: '22px', color: '#333' }}>{item.name}</span>
+                          <span style={{ color: '#666', fontSize: '20px' }}>({item.quantity}個)</span>
+                        </div>
+                        <button onClick={() => updateNewFormState({ historyAddedItems: historyAddedItems.filter((_, i) => i !== item.originalIndex) })} className="btn-delete">
+                          <TrashIcon /> 削除
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+                <div style={{ textAlign: 'center', marginTop: '35px' }}>
+                  <button onClick={handleHistoryBatchSubmit} className="btn-primary btn-batch-submit">全てまとめて登録</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
-}
-
-export default NewItemForm;
+    );
+  }
+  
+  export default NewItemForm;
