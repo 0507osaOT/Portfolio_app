@@ -20,7 +20,6 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<{ name: string; quantity: string }>({ name: '', quantity: '' });
 
-  // ジャンル別に商品をグループ化
   const groupedItems = items.reduce((acc, item) => {
     if (!acc[item.genre]) {
       acc[item.genre] = [];
@@ -29,7 +28,6 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
     return acc;
   }, {} as Record<string, Item[]>);
 
-  // 編集開始
   const handleEditStart = (itemId: string, currentName: string, currentQuantity: number) => {
     setEditingItem(itemId);
     setEditValues({
@@ -38,7 +36,6 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
     });
   };
 
-  // 編集値の更新
   const handleEditChange = (field: 'name' | 'quantity', value: string) => {
     setEditValues({
       ...editValues,
@@ -46,7 +43,6 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
     });
   };
 
-  // 数量の増減
   const handleQuantityChange = (increment: boolean) => {
     const currentQty = parseInt(editValues.quantity) || 0;
     if (increment) {
@@ -56,7 +52,6 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
     }
   };
 
-  // 編集保存
   const handleEditSave = () => {
     if (!editValues.name.trim() || !editValues.quantity) {
       alert('名前と個数は必須です');
@@ -84,13 +79,11 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
     setEditValues({ name: '', quantity: '' });
   };
 
-  // 編集キャンセル
   const handleEditCancel = () => {
     setEditingItem(null);
     setEditValues({ name: '', quantity: '' });
   };
 
-  // 商品削除
   const handleDelete = (itemId: string, itemName: string) => {
     if (window.confirm(`「${itemName}」を削除しますか？`)) {
       const updatedItems = items.filter(item => item.id !== itemId);
@@ -100,26 +93,119 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
 
   return (
     <div style={{ width: '100%', maxWidth: '1200px' }}>
-      {/* ヘッダー */}
+      <style>{`
+        .btn-back {
+          padding: 12px 24px;
+          background-color: #6c757d;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 18px;
+          font-weight: bold;
+          transition: all 0.2s ease;
+        }
+        .btn-back:hover {
+          background-color: #5a6268;
+          transform: translateY(-1px);
+        }
+        
+        .btn-edit {
+          padding: 8px 16px;
+          background-color: #007bff;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: bold;
+          transition: all 0.2s ease;
+        }
+        .btn-edit:hover {
+          background-color: #0056b3;
+          transform: translateY(-1px);
+        }
+        
+        .btn-delete {
+          padding: 8px 16px;
+          background-color: #dc3545;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: bold;
+          transition: all 0.2s ease;
+        }
+        .btn-delete:hover {
+          background-color: #c82333;
+          transform: translateY(-1px);
+        }
+        
+        .btn-save {
+          padding: 8px 16px;
+          background-color: #28a745;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: bold;
+          transition: all 0.2s ease;
+        }
+        .btn-save:hover {
+          background-color: #218838;
+          transform: translateY(-1px);
+        }
+        
+        .btn-cancel {
+          padding: 8px 16px;
+          background-color: #6c757d;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: bold;
+          transition: all 0.2s ease;
+        }
+        .btn-cancel:hover {
+          background-color: #5a6268;
+          transform: translateY(-1px);
+        }
+        
+        .btn-quantity {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          color: white;
+          border: none;
+          font-size: 20px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          transition: all 0.2s ease;
+        }
+        .btn-quantity:hover {
+          transform: scale(1.1);
+        }
+        .btn-quantity-plus {
+          background-color: #000;
+        }
+        .btn-quantity-minus {
+          background-color: #dc3545;
+        }
+      `}</style>
+
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: '40px'
       }}>
-        <button
-          onClick={onBack}
-          style={{
-            padding: '12px 24px',
-            backgroundColor: '#6c757d',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '18px',
-            fontWeight: 'bold'
-          }}
-        >
+        <button onClick={onBack} className="btn-back">
           ← ホームに戻る
         </button>
         <h2 style={{
@@ -131,7 +217,6 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
         <div style={{ width: '140px' }}></div>
       </div>
 
-      {/* 商品がない場合のメッセージ */}
       {items.length === 0 && (
         <div style={{
           width: '100%',
@@ -155,10 +240,8 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
         </div>
       )}
 
-      {/* ジャンル別商品表示 */}
       {Object.entries(groupedItems).map(([genre, genreItems]) => (
         <div key={genre} style={{ width: '100%', marginBottom: '52px' }}>
-          {/* ジャンル表示 */}
           <div style={{
             width: '100%',
             textAlign: 'center',
@@ -172,7 +255,6 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
             }}>{genre}</h2>
           </div>
 
-          {/* テーブル */}
           <div style={{
             width: '100%',
             backgroundColor: '#fff',
@@ -238,7 +320,6 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
               <tbody>
                 {genreItems.map((item) => (
                   <tr key={item.id}>
-                    {/* 商品名 */}
                     <td style={{
                       padding: '33px 26px',
                       textAlign: 'center',
@@ -267,7 +348,6 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
                       )}
                     </td>
 
-                    {/* 個数 */}
                     <td style={{
                       padding: '33px 26px',
                       textAlign: 'center',
@@ -302,39 +382,13 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
                           />
                           <button
                             onClick={() => handleQuantityChange(true)}
-                            style={{
-                              width: '40px',
-                              height: '40px',
-                              borderRadius: '50%',
-                              backgroundColor: '#000',
-                              color: 'white',
-                              border: 'none',
-                              fontSize: '20px',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontWeight: 'bold'
-                            }}
+                            className="btn-quantity btn-quantity-plus"
                           >
                             +
                           </button>
                           <button
                             onClick={() => handleQuantityChange(false)}
-                            style={{
-                              width: '40px',
-                              height: '40px',
-                              borderRadius: '50%',
-                              backgroundColor: '#dc3545',
-                              color: 'white',
-                              border: 'none',
-                              fontSize: '20px',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontWeight: 'bold'
-                            }}
+                            className="btn-quantity btn-quantity-minus"
                           >
                             −
                           </button>
@@ -344,7 +398,6 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
                       )}
                     </td>
 
-                    {/* 追加日 */}
                     <td style={{
                       padding: '33px 26px',
                       textAlign: 'center',
@@ -355,7 +408,6 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
                       {new Date(item.addedDate).toLocaleDateString('ja-JP')}
                     </td>
 
-                    {/* 種類 */}
                     <td style={{
                       padding: '33px 26px',
                       textAlign: 'center',
@@ -374,7 +426,6 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
                       </span>
                     </td>
 
-                    {/* 操作ボタン */}
                     <td style={{
                       padding: '33px 26px',
                       textAlign: 'center',
@@ -387,34 +438,10 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
                           justifyContent: 'center',
                           alignItems: 'center'
                         }}>
-                          <button
-                            onClick={handleEditSave}
-                            style={{
-                              padding: '8px 16px',
-                              backgroundColor: '#28a745',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              fontWeight: 'bold'
-                            }}
-                          >
+                          <button onClick={handleEditSave} className="btn-save">
                             保存
                           </button>
-                          <button
-                            onClick={handleEditCancel}
-                            style={{
-                              padding: '8px 16px',
-                              backgroundColor: '#6c757d',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              fontWeight: 'bold'
-                            }}
-                          >
+                          <button onClick={handleEditCancel} className="btn-cancel">
                             キャンセル
                           </button>
                         </div>
@@ -427,31 +454,13 @@ const Stock: React.FC<StockProps> = ({ onBack, items, onUpdateItems }) => {
                         }}>
                           <button
                             onClick={() => handleEditStart(item.id, item.name, item.quantity)}
-                            style={{
-                              padding: '8px 16px',
-                              backgroundColor: '#007bff',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              fontWeight: 'bold'
-                            }}
+                            className="btn-edit"
                           >
                             編集
                           </button>
                           <button
                             onClick={() => handleDelete(item.id, item.name)}
-                            style={{
-                              padding: '8px 16px',
-                              backgroundColor: '#dc3545',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              fontWeight: 'bold'
-                            }}
+                            className="btn-delete"
                           >
                             削除
                           </button>

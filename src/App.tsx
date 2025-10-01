@@ -4,10 +4,6 @@ import Stock from './Stock';
 import Login from './login';
 import NewItemForm from './new';
 
-// ========================================
-// 認証関連の型定義とコンテキスト
-// ========================================
-
 interface User {
   name: string;
   email: string;
@@ -77,10 +73,6 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = () => {
     setCurrentUser(null);
     localStorage.removeItem('currentUser');
-    // データは削除しない（残したい場合）
-    // もしログアウト時にデータも削除したい場合は以下を追加
-    // localStorage.removeItem('items');
-    // localStorage.removeItem('newFormState');
   };
 
   return (
@@ -89,10 +81,6 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     </AuthContext.Provider>
   );
 };
-
-// ========================================
-// 商品の型定義
-// ========================================
 
 export interface Item {
   id: string;
@@ -104,12 +92,8 @@ export interface Item {
   source: 'new' | 'history';
 }
 
-// ========================================
-// localStorageを使うカスタムフック
-// ========================================
 
 function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
-  // 初期値をlocalStorageから取得
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
       const item = window.localStorage.getItem(key);
@@ -120,7 +104,6 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val
     }
   });
 
-  // 値を更新してlocalStorageに保存
   const setValue = (value: T | ((val: T) => T)) => {
     try {
       const valueToStore = value instanceof Function ? value(storedValue) : value;
@@ -134,42 +117,160 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val
   return [storedValue, setValue];
 }
 
-// ========================================
-// メインApp（認証統合版）
-// ========================================
+
+const GlobalStyles = () => (
+  <style>{`
+    .calendar-button {
+      padding: 15px 40px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 13px;
+      cursor: pointer;
+      font-size: 22px;
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s ease;
+    }
+    .calendar-button:hover {
+      background-color: #218838;
+      transform: translateY(-2px);
+    }
+    
+    .new-button {
+      padding: 20px 52px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 13px;
+      cursor: pointer;
+      font-size: 26px;
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+    }
+    
+    .stock-button {
+      padding: 20px 52px;
+      background-color: #ff8c00;
+      color: white;
+      border: none;
+      border-radius: 13px;
+      cursor: pointer;
+      font-size: 26px;
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(255, 140, 0, 0.2);
+      transition: all 0.2s ease;
+    }
+    .stock-button:hover {
+      background-color: #e67e00;
+      transform: translateY(-2px);
+    }
+    
+    .settings-button {
+      padding: 10px 26px;
+      background: #6c757d;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 21px;
+      color: white;
+      font-weight: bold;
+    }
+    
+    .logout-button {
+      width: 100%;
+      padding: 15px;
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .logout-button:hover {
+      background-color: #c82333;
+    }
+    
+    .close-button {
+      width: 100%;
+      padding: 15px;
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .close-button:hover {
+      background-color: #5a6268;
+    }
+  `}</style>
+);
+
 
 function AppContent() {
   const { currentUser, logout } = useAuth();
   const [currentPage, setCurrentPage] = useState<'home' | 'new' | 'calendar' | 'stock'>('home'); 
   
-  // localStorageを使ってitemsを保存
-  const [items, setItems] = useLocalStorage<Item[]>('items', []);
+  // 全ユーザーのアイテムを管理
+  const [allUserItems, setAllUserItems] = useLocalStorage<Record<string, Item[]>>('allUserItems', {});
   
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   
-  // newFormStateもlocalStorageに保存
-  const [newFormState, setNewFormState] = useLocalStorage('newFormState', {
+  // ユーザーごとの履歴を管理
+  const [userItemHistories, setUserItemHistories] = useLocalStorage<Record<string, Array<{genre: string, name: string}>>>('userItemHistories', {});
+  
+  // 現在のユーザーのメールアドレスをキーとして使用
+  const currentUserEmail = currentUser?.email || '';
+  
+  // 現在のユーザーのアイテムのみを取得
+  const items = allUserItems[currentUserEmail] || [];
+  
+  // 現在のユーザーの履歴を取得（存在しない場合は空配列）
+  const currentUserHistory = userItemHistories[currentUserEmail] || [];
+  
+  const [newFormState, setNewFormState] = useState({
     newAddedItems: [] as Array<{genre: string, name: string, quantity: string, barcode: string}>,
     historyAddedItems: [] as Array<{genre: string, name: string, quantity: string, barcode: string}>,
-    itemHistory: [] as Array<{genre: string, name: string}>
+    itemHistory: currentUserHistory
   });
+
+  // ユーザーが変わったら履歴を更新
+  useEffect(() => {
+    setNewFormState(prev => ({
+      ...prev,
+      itemHistory: userItemHistories[currentUserEmail] || []
+    }));
+  }, [currentUserEmail, userItemHistories]);
 
   const handleLogout = () => {
     if (window.confirm('ログアウトしますか？')) {
       logout();
       setShowSettingsModal(false);
-      // ログアウト時にデータも削除したい場合は以下のコメントを解除
-      // setItems([]);
-      // setNewFormState({
-      //   newAddedItems: [],
-      //   historyAddedItems: [],
-      //   itemHistory: []
-      // });
     }
   };
 
   const updateNewFormState = (newState: Partial<typeof newFormState>) => {
-    setNewFormState(prev => ({ ...prev, ...newState }));
+    setNewFormState(prev => {
+      const updated = { ...prev, ...newState };
+      
+      // itemHistoryが更新された場合、現在のユーザーの履歴も更新
+      if (newState.itemHistory) {
+        setUserItemHistories(prevHistories => ({
+          ...prevHistories,
+          [currentUserEmail]: newState.itemHistory!
+        }));
+      }
+      
+      return updated;
+    });
   };
 
   const addItems = (newItems: Array<{genre: string, name: string, quantity: number, barcode?: string}>, source: 'new' | 'history') => {
@@ -180,11 +281,19 @@ function AppContent() {
       source
     }));
     
-    setItems(prev => [...prev, ...itemsWithMetadata]);
+    // 現在のユーザーのアイテムに追加
+    setAllUserItems(prev => ({
+      ...prev,
+      [currentUserEmail]: [...(prev[currentUserEmail] || []), ...itemsWithMetadata]
+    }));
   };
 
   const updateItems = (updatedItems: Item[]) => {
-    setItems(updatedItems);
+    // 現在のユーザーのアイテムを更新
+    setAllUserItems(prev => ({
+      ...prev,
+      [currentUserEmail]: updatedItems
+    }));
   };
 
   useEffect(() => {
@@ -245,29 +354,7 @@ function AppContent() {
             <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '30px' }}>
               <button 
                 onClick={() => goToPage('calendar')}
-                style={{
-                  padding: '15px 40px',
-                  backgroundColor: '#28a745',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '13px',
-                  cursor: 'pointer',
-                  fontSize: '22px',
-                  fontWeight: 'bold',
-                  boxShadow: '0 4px 8px rgba(40, 167, 69, 0.2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#218838';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#28a745';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
+                className="calendar-button"
               >
                 📅 カレンダー
               </button>
@@ -276,41 +363,12 @@ function AppContent() {
             <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', marginBottom: '52px' }}>
               <button 
                 onClick={() => goToPage('new')}
-                style={{
-                  padding: '20px 52px',
-                  backgroundColor: '#007bff',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '13px',
-                  cursor: 'pointer',
-                  fontSize: '26px',
-                  fontWeight: 'bold',
-                  boxShadow: '0 4px 8px rgba(0, 123, 255, 0.2)'
-                }}
+                className="new-button"
               >新規追加・買い出し</button>
               
               <button 
                 onClick={() => goToPage('stock')}
-                style={{
-                  padding: '20px 52px',
-                  backgroundColor: '#ff8c00',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '13px',
-                  cursor: 'pointer',
-                  fontSize: '26px',
-                  fontWeight: 'bold',
-                  boxShadow: '0 4px 8px rgba(255, 140, 0, 0.2)',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#e67e00';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#ff8c00';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
+                className="stock-button"
               >
                 ストック
               </button>
@@ -399,6 +457,8 @@ function AppContent() {
 
   return (
     <>
+      <GlobalStyles />
+      
       <div style={{
         width: '100%',
         maxWidth: '1200px',
@@ -443,16 +503,7 @@ function AppContent() {
               {currentPage === 'home' && (
                 <button 
                   onClick={() => setShowSettingsModal(true)}
-                  style={{
-                    padding: '10px 26px',
-                    background: '#6c757d',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontSize: '21px',
-                    color: 'white',
-                    fontWeight: 'bold'
-                  }}
+                  className="settings-button"
                 >
                   設定
                 </button>
@@ -475,7 +526,6 @@ function AppContent() {
         </div>
       </div>
 
-      {/* 設定モーダル */}
       {showSettingsModal && (
         <div 
           style={{
@@ -536,48 +586,14 @@ function AppContent() {
             }}>
               <button
                 onClick={handleLogout}
-                style={{
-                  width: '100%',
-                  padding: '15px',
-                  backgroundColor: '#dc3545',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '10px',
-                  fontSize: '20px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#c82333';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#dc3545';
-                }}
+                className="logout-button"
               >
                 ログアウト
               </button>
 
               <button
                 onClick={() => setShowSettingsModal(false)}
-                style={{
-                  width: '100%',
-                  padding: '15px',
-                  backgroundColor: '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '10px',
-                  fontSize: '20px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#5a6268';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#6c757d';
-                }}
+                className="close-button"
               >
                 閉じる
               </button>
@@ -588,10 +604,6 @@ function AppContent() {
     </>
   );
 }
-
-// ========================================
-// 認証ラッパーとエクスポート
-// ========================================
 
 function App() {
   return (

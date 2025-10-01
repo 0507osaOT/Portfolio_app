@@ -42,6 +42,34 @@ const Login = () => {
       backgroundColor: '#ffffff',
       overflow: 'auto'
     }}>
+      <style>{`
+        .submit-button {
+          width: 100%;
+          background-color: #007bff;
+          color: white;
+          padding: 20px;
+          border-radius: 13px;
+          font-weight: bold;
+          border: none;
+          cursor: pointer;
+          font-size: 26px;
+          box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+          transition: all 0.2s ease;
+        }
+        .submit-button:hover {
+          background-color: #0056b3;
+          transform: translateY(-2px);
+        }
+        .toggle-button {
+          color: #007bff;
+          font-size: 18px;
+          background: none;
+          border: none;
+          cursor: pointer;
+          text-decoration: underline;
+        }
+      `}</style>
+      
       <div style={{
         backgroundColor: '#fff',
         borderRadius: '20px',
@@ -158,27 +186,7 @@ const Login = () => {
 
           <button
             onClick={handleSubmit}
-            style={{
-              width: '100%',
-              backgroundColor: '#007bff',
-              color: 'white',
-              padding: '20px',
-              borderRadius: '13px',
-              fontWeight: 'bold',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '26px',
-              boxShadow: '0 4px 8px rgba(0, 123, 255, 0.2)',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#0056b3';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#007bff';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
+            className="submit-button"
           >
             {isLogin ? 'ログイン' : 'アカウント作成'}
           </button>
@@ -190,14 +198,7 @@ const Login = () => {
               setIsLogin(!isLogin);
               setError('');
             }}
-            style={{
-              color: '#007bff',
-              fontSize: '18px',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              textDecoration: 'underline'
-            }}
+            className="toggle-button"
           >
             {isLogin ? 'アカウントをお持ちでない方はこちら' : '既にアカウントをお持ちの方はこちら'}
           </button>
