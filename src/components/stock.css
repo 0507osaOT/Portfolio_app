@@ -1,0 +1,332 @@
+/* stock.css */
+
+/* メインコンテナ */
+.stock-main-container {
+  width: 100%;
+  max-width: 1200px;
+}
+
+/* ヘッダー部分 */
+.stock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.stock-back-button {
+  padding: 12px 24px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.stock-back-button:hover {
+  background-color: #5a6268;
+  transform: translateY(-1px);
+}
+
+.stock-title {
+  font-size: 36px;
+  font-weight: bold;
+  margin: 0;
+  color: #333;
+}
+
+.stock-spacer {
+  width: 140px;
+}
+
+/* 空の状態 */
+.stock-empty-state {
+  width: 100%;
+  text-align: center;
+  padding: 60px;
+  background-color: #f8f9fa;
+  border-radius: 20px;
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.1);
+}
+
+.stock-empty-title {
+  font-size: 32px;
+  color: #666;
+  margin: 0;
+  margin-bottom: 20px;
+}
+
+.stock-empty-description {
+  font-size: 18px;
+  color: #999;
+  margin: 0;
+}
+
+/* ジャンルセクション */
+.stock-genre-section {
+  width: 100%;
+  margin-bottom: 52px;
+}
+
+.stock-genre-header {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.stock-genre-title {
+  font-size: 42px;
+  font-weight: bold;
+  margin: 0;
+  color: #333;
+}
+
+.stock-genre-container {
+  width: 100%;
+  background-color: #fff;
+  padding: 39px;
+  border-radius: 20px;
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+/* テーブル */
+.stock-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 23px;
+}
+
+.stock-table th {
+  padding: 26px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 31px;
+  color: #333;
+  background-color: #f8f9fa;
+  white-space: nowrap;
+}
+
+.stock-table td {
+  padding: 33px 26px;
+  text-align: center;
+  background-color: #ffffff;
+}
+
+/* 商品名セル */
+.stock-name-cell {
+  font-size: 24px;
+  color: #333;
+}
+
+.stock-name-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 20px;
+  border: 2px solid #007bff;
+  border-radius: 6px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* 個数セル */
+.stock-quantity-cell {
+  font-size: 36px;
+  font-weight: bold;
+  color: #333;
+}
+
+.stock-quantity-edit-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.stock-quantity-input {
+  width: 80px;
+  padding: 8px 12px;
+  font-size: 28px;
+  border: 2px solid #007bff;
+  border-radius: 6px;
+  text-align: center;
+  box-sizing: border-box;
+  font-weight: bold;
+  background-color: #f8f9fa;
+  cursor: default;
+}
+
+/* 日付セル */
+.stock-date-cell {
+  font-size: 18px;
+  color: #666;
+}
+
+/* 種類セル */
+.stock-type-cell {
+  font-size: 16px;
+}
+
+.stock-type-badge {
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.stock-type-badge.new {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.stock-type-badge.history {
+  background-color: #e8f5e8;
+  color: #388e3c;
+}
+
+/* 操作セル */
+.stock-actions-container {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ボタン共通スタイル */
+.stock-btn {
+  padding: 8px 16px;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.stock-btn:hover {
+  transform: translateY(-1px);
+}
+
+.stock-btn:active {
+  transform: translateY(0);
+}
+
+/* 編集ボタン */
+.stock-btn-edit {
+  background-color: #007bff;
+}
+
+.stock-btn-edit:hover {
+  background-color: #0056b3;
+}
+
+/* 削除ボタン */
+.stock-btn-delete {
+  background-color: #dc3545;
+}
+
+.stock-btn-delete:hover {
+  background-color: #c82333;
+}
+
+/* 保存ボタン */
+.stock-btn-save {
+  background-color: #28a745;
+}
+
+.stock-btn-save:hover {
+  background-color: #218838;
+}
+
+/* キャンセルボタン */
+.stock-btn-cancel {
+  background-color: #6c757d;
+}
+
+.stock-btn-cancel:hover {
+  background-color: #5a6268;
+}
+
+/* 個数調整ボタン */
+.stock-btn-quantity {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: white;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.stock-btn-quantity:hover {
+  transform: scale(1.1);
+}
+
+.stock-btn-quantity:active {
+  transform: scale(1);
+}
+
+.stock-btn-quantity-plus {
+  background-color: #000;
+}
+
+.stock-btn-quantity-plus:hover {
+  background-color: #333;
+}
+
+.stock-btn-quantity-minus {
+  background-color: #dc3545;
+}
+
+.stock-btn-quantity-minus:hover {
+  background-color: #c82333;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 1024px) {
+  .stock-genre-container {
+    padding: 20px;
+    overflow-x: auto;
+  }
+
+  .stock-table {
+    font-size: 18px;
+  }
+
+  .stock-table th {
+    font-size: 24px;
+    padding: 16px;
+  }
+
+  .stock-table td {
+    padding: 20px 16px;
+  }
+
+  .stock-name-cell {
+    font-size: 20px;
+  }
+
+  .stock-quantity-cell {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 768px) {
+  .stock-genre-title {
+    font-size: 32px;
+  }
+
+  .stock-title {
+    font-size: 28px;
+  }
+}

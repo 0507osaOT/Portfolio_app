@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import './new.css';
 
 interface Item {
   genre: string;
@@ -119,17 +120,14 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
   }, [showMessage]);
 
   const stopScan = useCallback(() => {
-    // codeReaderを完全に破棄
     if (codeReaderRef.current) {
       try {
         if (typeof codeReaderRef.current.reset === 'function') {
           codeReaderRef.current.reset();
         }
-        // デコード処理を完全に停止
         if (typeof codeReaderRef.current.stopContinuousDecode === 'function') {
           codeReaderRef.current.stopContinuousDecode();
         }
-        // codeReaderを完全にクリア
         codeReaderRef.current = null;
       } catch (e) {
         console.error('Reset error:', e);
@@ -141,7 +139,6 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
       streamRef.current = null;
     }
     
-    // videoのsrcObjectもクリア
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
@@ -208,7 +205,6 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
   const startScan = useCallback(async () => {
     if (isScanning || !isZxingLoaded || isProcessingRef.current) return;
     
-    // 前回の状態を完全にクリア
     if (codeReaderRef.current) {
       try {
         if (typeof codeReaderRef.current.reset === 'function') {
@@ -242,7 +238,6 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
       setIsScanning(true);
       showMessage("バーコードをスキャン中...");
       
-      // 新しいインスタンスを作成
       codeReaderRef.current = new ZXingClass();
 
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -265,7 +260,6 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
       ) || videoInputDevices[0];
 
       codeReaderRef.current.decodeFromVideoDevice(rearCamera.deviceId, videoRef.current, (result: any, error: any) => {
-        // エラーがある場合は無視（スキャン中の正常なエラー）
         if (error && error.name !== 'NotFoundException') {
           return;
         }
@@ -374,177 +368,255 @@ function NewItemForm({ onBack = () => {}, onAddItems = () => {}, newFormState = 
   }, [itemHistory, localItemHistory, uniqueGenres]);
 
   return (
-    <div style={{ width: '100%', maxWidth: '1000px', margin: '0 auto', fontFamily: 'sans-serif', padding: '20px' }}>
-      <style>{`
-        .card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        .btn-primary { background: #6c757d; color: white; font-weight: bold; padding: 16px 32px; border-radius: 12px; transition: all 300ms; display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; border: none; font-size: 20px; }
-        .btn-primary:hover:not(:disabled) { background: #5a6268; transform: scale(1.02); }
-        .btn-primary:disabled { background: #9ca3af; cursor: not-allowed; }
-        .btn-icon-round { width: 56px; height: 56px; border-radius: 50%; border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 200ms; }
-        .btn-icon-round:disabled { background: #d1d5db !important; cursor: not-allowed; opacity: 0.5; }
-        .btn-icon-round:hover:not(:disabled) { transform: scale(1.1); }
-        .btn-back { padding: 14px 28px; background: #6c757d; color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 20px; font-weight: bold; display: flex; align-items: center; gap: 10px; transition: all 200ms; }
-        .btn-back:hover { background: #5a6268; transform: translateY(-1px); }
-        .btn-stop-scan { background: #dc3545; padding: 18px 40px; font-size: 22px; transition: all 200ms; }
-        .btn-stop-scan:hover { background: #c82333; }
-        .btn-submit { padding: 20px 50px; font-size: 24px; }
-        .btn-batch-submit { background: #28a745; padding: 20px 60px; font-size: 24px; }
-        .btn-batch-submit:hover { background: #218838; }
-        .btn-delete { padding: 12px 24px; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: bold; transition: all 200ms; }
-        .btn-delete:hover { background: #c82333; transform: translateY(-1px); }
-        .notification { position: fixed; top: 20px; left: 50%; transform: translate(-50%,0); z-index: 50; background: #3b82f6; color: white; padding: 16px 32px; border-radius: 9999px; font-size: 18px; font-weight: bold; }
-        .input-field { width: 100%; padding: 18px; border: 1px solid #d1d5db; border-radius: 12px; font-size: 20px; }
-        .input-field:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.3); }
-        .quantity-input { width: 90px; text-align: center; padding: 18px; font-size: 24px; font-weight: bold; border: 2px solid #d1d5db; }
-        .video-container { width: 100%; max-width: 500px; aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; border: 4px solid #007bff; margin: 0 auto; }
-        .video-container video { width: 100%; height: 100%; object-fit: cover; }
-      `}</style>
+    <div className="new-main-container">
+      {showNotification && <div className="new-notification">{message}</div>}
 
-      {showNotification && <div className="notification">{message}</div>}
-
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '40px', gap: '20px' }}>
-        <button onClick={onBack} className="btn-back">
+      <div className="new-header">
+        <button onClick={onBack} className="new-btn-back">
           <BackIcon /> ホームに戻る
         </button>
-        <h2 style={{ fontSize: '42px', fontWeight: 'bold', margin: 0 }}>新規追加(買い出し)画面</h2>
+        <h2 className="new-page-title">新規追加(買い出し)画面</h2>
       </div>
 
-      <div className="card" style={{ marginBottom: '50px' }}>
-        <h3 style={{ fontSize: '38px', fontWeight: 'bold', marginBottom: '35px', borderBottom: '4px solid #007bff', paddingBottom: '12px' }}>新規：追加</h3>
+      <div className="new-card">
+        <h3 className="new-section-title primary">新規：追加</h3>
         
         {isScanning && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '30px', background: '#f0f8ff', padding: '30px', borderRadius: '15px' }}>
-            <div className="video-container">
+          <div className="new-scan-area">
+            <div className="new-video-container">
               <video ref={videoRef} autoPlay playsInline muted />
             </div>
-            <p style={{ marginTop: '20px', color: '#007bff', fontWeight: 'bold', fontSize: '22px' }}>{message || "バーコードをカメラに合わせてください"}</p>
-            <button onClick={stopScan} className="btn-primary btn-stop-scan">スキャンを停止</button>
+            <p className="new-scan-message">{message || "バーコードをカメラに合わせてください"}</p>
+            <button onClick={stopScan} className="new-btn-primary new-btn-stop-scan">スキャンを停止</button>
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '35px', marginBottom: '35px' }}>
-          <div>
-            <div style={{ fontSize: '24px', marginBottom: '12px', fontWeight: 'bold', color: '#333' }}>ジャンル：</div>
-            <input type="text" value={newItem.genre} onChange={(e) => handleNewItemChange('genre', e.target.value)} className="input-field" disabled={isScanning} placeholder="例: 野菜" />
+        <div className="new-form-grid-2">
+          <div className="new-form-field">
+            <div className="new-field-label">ジャンル：</div>
+            <input 
+              type="text" 
+              value={newItem.genre} 
+              onChange={(e) => handleNewItemChange('genre', e.target.value)} 
+              className="new-input-field" 
+              disabled={isScanning} 
+              placeholder="例: 野菜" 
+            />
           </div>
-          <div>
-            <div style={{ fontSize: '24px', marginBottom: '12px', fontWeight: 'bold', color: '#333' }}>名前：</div>
-            <input type="text" value={newItem.name} onChange={(e) => handleNewItemChange('name', e.target.value)} className="input-field" disabled={isScanning} placeholder="例: じゃがいも" />
+          <div className="new-form-field">
+            <div className="new-field-label">名前：</div>
+            <input 
+              type="text"value={newItem.name} 
+              onChange={(e) => handleNewItemChange('name', e.target.value)} 
+              className="new-input-field" 
+              disabled={isScanning} 
+              placeholder="例: じゃがいも" 
+            />
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '35px', marginBottom: '40px' }}>
-          <div>
-            <div style={{ fontSize: '24px', marginBottom: '12px', fontWeight: 'bold', color: '#333' }}>個数：</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-              <button onClick={() => { const q = parseInt(newItem.quantity) || 0; handleNewItemChange('quantity', String(q + 1)); }} className="btn-icon-round" style={{ background: '#000' }} disabled={isScanning}><PlusIcon /></button>
-              <input type="number" value={newItem.quantity} onChange={(e) => handleNewItemChange('quantity', e.target.value)} className="input-field quantity-input" disabled={isScanning} />
-              <button onClick={() => { const q = parseInt(newItem.quantity) || 0; if (q > 1) handleNewItemChange('quantity', String(q - 1)); }} className="btn-icon-round" style={{ background: '#dc3545' }} disabled={isScanning || (parseInt(newItem.quantity) || 0) <= 1}><MinusIcon /></button>
+        <div className="new-form-grid-mixed">
+          <div className="new-form-field">
+            <div className="new-field-label">個数：</div>
+            <div className="new-quantity-control">
+              <button 
+                onClick={() => { 
+                  const q = parseInt(newItem.quantity) || 0; 
+                  handleNewItemChange('quantity', String(q + 1)); 
+                }} 
+                className="new-btn-icon-round plus" 
+                disabled={isScanning}
+              >
+                <PlusIcon />
+              </button>
+              <input 
+                type="number" 
+                value={newItem.quantity} 
+                onChange={(e) => handleNewItemChange('quantity', e.target.value)} 
+                className="new-input-field new-quantity-input" 
+                disabled={isScanning} 
+              />
+              <button 
+                onClick={() => { 
+                  const q = parseInt(newItem.quantity) || 0; 
+                  if (q > 1) handleNewItemChange('quantity', String(q - 1)); 
+                }} 
+                className="new-btn-icon-round minus" 
+                disabled={isScanning || (parseInt(newItem.quantity) || 0) <= 1}
+              >
+                <MinusIcon />
+              </button>
             </div>
           </div>
-          <div>
-            <div style={{ fontSize: '24px', marginBottom: '12px', fontWeight: 'bold', color: '#333' }}>バーコード & スキャン：</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-              <input type="text" value={newItem.barcode} onChange={(e) => handleNewItemChange('barcode', e.target.value)} className="input-field" disabled={isScanning} placeholder="バーコード" />
-              <button onClick={isScanning ? stopScan : startScan} className="btn-icon-round" style={{ background: isScanning ? '#dc3545' : '#007bff', flexShrink: 0 }} disabled={!isZxingLoaded && !isScanning}><ScanIcon /></button>
+          <div className="new-form-field">
+            <div className="new-field-label">バーコード & スキャン：</div>
+            <div className="new-barcode-control">
+              <input 
+                type="text" 
+                value={newItem.barcode} 
+                onChange={(e) => handleNewItemChange('barcode', e.target.value)} 
+                className="new-input-field" 
+                disabled={isScanning} 
+                placeholder="バーコード" 
+              />
+              <button 
+                onClick={isScanning ? stopScan : startScan} 
+                className={`new-btn-icon-round scan ${isScanning ? 'scanning' : ''}`}
+                disabled={!isZxingLoaded && !isScanning}
+              >
+                <ScanIcon />
+              </button>
             </div>
           </div>
         </div>
         
-        <div style={{ textAlign: 'center', marginTop: '45px' }}>
-          <button onClick={handleNewItemSubmit} className="btn-primary btn-submit" disabled={isScanning || !newItem.name || !newItem.genre || (parseInt(newItem.quantity) || 0) <= 0}>
+        <div className="new-submit-area">
+          <button 
+            onClick={handleNewItemSubmit} 
+            className="new-btn-primary new-btn-submit" 
+            disabled={isScanning || !newItem.name || !newItem.genre || (parseInt(newItem.quantity) || 0) <= 0}
+          >
             ＋ 項目を追加リストへ
           </button>
         </div>
 
         {newAddedItems.length > 0 && (
-          <div style={{ marginTop: '50px' }}>
-            <h4 style={{ fontSize: '30px', fontWeight: 'bold', marginBottom: '25px', color: '#333' }}>新規追加予定の商品 ({newAddedItems.length}件)</h4>
-            <div style={{ background: '#f8f9fa', padding: '30px', borderRadius: '12px' }}>
+          <div className="new-added-list">
+            <h4 className="new-added-list-title">新規追加予定の商品 ({newAddedItems.length}件)</h4>
+            <div className="new-added-list-container">
               {Object.entries(groupedNewItems).map(([genre, items]) => (
-                <div key={genre} style={{ marginBottom: '30px' }}>
-                  <div style={{ fontSize: '26px', fontWeight: 'bold', marginBottom: '20px', color: '#007bff', borderLeft: '5px solid #007bff', paddingLeft: '15px' }}>{genre}</div>
+                <div key={genre} className="new-genre-group">
+                  <div className="new-genre-group-title primary">{genre}</div>
                   {(items as Array<Item & { originalIndex: number }>).map((item) => (
-                    <div key={item.originalIndex} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '22px 28px', marginBottom: '12px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                      <div style={{ display: 'flex', gap: '35px', flex: 1, alignItems: 'center' }}>
-                        <span style={{ fontWeight: 'bold', fontSize: '22px', color: '#333' }}>{item.name}</span>
-                        <span style={{ color: '#666', fontSize: '20px' }}>({item.quantity}個)</span>
+                    <div key={item.originalIndex} className="new-item-card">
+                      <div className="new-item-info">
+                        <span className="new-item-name">{item.name}</span>
+                        <span className="new-item-quantity">({item.quantity}個)</span>
                       </div>
-                      <button onClick={() => updateNewFormState({ newAddedItems: newAddedItems.filter((_, i) => i !== item.originalIndex) })} className="btn-delete">
+                      <button 
+                        onClick={() => updateNewFormState({ newAddedItems: newAddedItems.filter((_, i) => i !== item.originalIndex) })} 
+                        className="new-btn-delete"
+                      >
                         <TrashIcon /> 削除
                       </button>
                     </div>
                   ))}
                 </div>
               ))}
-              <div style={{ textAlign: 'center', marginTop: '35px' }}>
-                <button onClick={handleNewBatchSubmit} className="btn-primary btn-batch-submit">全てまとめて登録</button>
+              <div className="new-batch-submit-area">
+                <button onClick={handleNewBatchSubmit} className="new-btn-primary new-btn-batch-submit">
+                  全てまとめて登録
+                </button>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      <div className="card">
-        <h3 style={{ fontSize: '38px', fontWeight: 'bold', marginBottom: '35px', borderBottom: '4px solid #6c757d', paddingBottom: '12px' }}>履歴：追加 (履歴: {localItemHistory.length}件)</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 350px', gap: '35px', marginBottom: '40px' }}>
-          <div>
-            <div style={{ fontSize: '24px', marginBottom: '12px', fontWeight: 'bold', color: '#333' }}>ジャンル：</div>
-            <select value={historyItem.genre} onChange={(e) => { handleHistoryItemChange('genre', e.target.value); setHistoryItem(prev => ({ ...prev, name: '' })); }} disabled={uniqueGenres.length === 0} className="input-field" style={{ fontSize: '20px' }}>
+      <div className="new-card">
+        <h3 className="new-section-title secondary">履歴：追加 (履歴: {localItemHistory.length}件)</h3>
+        <div className="new-form-grid-3">
+          <div className="new-form-field">
+            <div className="new-field-label">ジャンル：</div>
+            <select 
+              value={historyItem.genre} 
+              onChange={(e) => { 
+                handleHistoryItemChange('genre', e.target.value); 
+                setHistoryItem(prev => ({ ...prev, name: '' })); 
+              }} 
+              disabled={uniqueGenres.length === 0} 
+              className="new-input-field"
+            >
               <option value="">選択してください</option>
               {uniqueGenres.map((genre, i) => <option key={i} value={genre}>{genre}</option>)}
             </select>
           </div>
-          <div>
-            <div style={{ fontSize: '24px', marginBottom: '12px', fontWeight: 'bold', color: '#333' }}>名前：</div>
-            <select value={historyItem.name} onChange={(e) => handleHistoryItemChange('name', e.target.value)} disabled={!historyItem.genre || namesForSelectedGenre.length === 0} className="input-field" style={{ fontSize: '20px' }}>
+          <div className="new-form-field">
+            <div className="new-field-label">名前：</div>
+            <select 
+              value={historyItem.name} 
+              onChange={(e) => handleHistoryItemChange('name', e.target.value)} 
+              disabled={!historyItem.genre || namesForSelectedGenre.length === 0} 
+              className="new-input-field"
+            >
               <option value="">選択してください</option>
               {namesForSelectedGenre.map((name, i) => <option key={i} value={name}>{name}</option>)}
             </select>
           </div>
-          <div>
-            <div style={{ fontSize: '24px', marginBottom: '12px', fontWeight: 'bold', color: '#333' }}>個数：</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-              <button onClick={() => { const q = parseInt(historyItem.quantity) || 0; handleHistoryItemChange('quantity', String(q + 1)); }} className="btn-icon-round" style={{ background: '#000' }}><PlusIcon /></button>
-              <input type="number" value={historyItem.quantity} onChange={(e) => handleHistoryItemChange('quantity', e.target.value)} className="input-field quantity-input" />
-              <button onClick={() => { const q = parseInt(historyItem.quantity) || 0; if (q > 1) handleHistoryItemChange('quantity', String(q - 1)); }} className="btn-icon-round" style={{ background: '#dc3545' }} disabled={(parseInt(historyItem.quantity) || 0) <= 1}><MinusIcon /></button>
-              </div>
+          <div className="new-form-field">
+            <div className="new-field-label">個数：</div>
+            <div className="new-quantity-control">
+              <button 
+                onClick={() => { 
+                  const q = parseInt(historyItem.quantity) || 0; 
+                  handleHistoryItemChange('quantity', String(q + 1)); 
+                }} 
+                className="new-btn-icon-round plus"
+              >
+                <PlusIcon />
+              </button>
+              <input 
+                type="number" 
+                value={historyItem.quantity} 
+                onChange={(e) => handleHistoryItemChange('quantity', e.target.value)} 
+                className="new-input-field new-quantity-input" 
+              />
+              <button 
+                onClick={() => { 
+                  const q = parseInt(historyItem.quantity) || 0; 
+                  if (q > 1) handleHistoryItemChange('quantity', String(q - 1)); 
+                }} 
+                className="new-btn-icon-round minus" 
+                disabled={(parseInt(historyItem.quantity) || 0) <= 1}
+              >
+                <MinusIcon />
+              </button>
             </div>
           </div>
-          <div style={{ textAlign: 'center', marginTop: '45px' }}>
-            <button onClick={handleHistoryItemSubmit} className="btn-primary btn-submit" disabled={!historyItem.name || !historyItem.genre || (parseInt(historyItem.quantity) || 0) <= 0}>
-              ＋ 項目を追加リストへ
-            </button>
-          </div>
-          {historyAddedItems.length > 0 && (
-            <div style={{ marginTop: '50px' }}>
-              <h4 style={{ fontSize: '30px', fontWeight: 'bold', marginBottom: '25px', color: '#333' }}>履歴追加予定の商品 ({historyAddedItems.length}件)</h4>
-              <div style={{ background: '#f8f9fa', padding: '30px', borderRadius: '12px' }}>
-                {Object.entries(groupedHistoryItems).map(([genre, items]) => (
-                  <div key={genre} style={{ marginBottom: '30px' }}>
-                    <div style={{ fontSize: '26px', fontWeight: 'bold', marginBottom: '20px', color: '#6c757d', borderLeft: '5px solid #6c757d', paddingLeft: '15px' }}>{genre}</div>
-                    {(items as Array<Item & { originalIndex: number }>).map((item) => (
-                      <div key={item.originalIndex} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '22px 28px', marginBottom: '12px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                        <div style={{ display: 'flex', gap: '35px', flex: 1, alignItems: 'center' }}>
-                          <span style={{ fontWeight: 'bold', fontSize: '22px', color: '#333' }}>{item.name}</span>
-                          <span style={{ color: '#666', fontSize: '20px' }}>({item.quantity}個)</span>
-                        </div>
-                        <button onClick={() => updateNewFormState({ historyAddedItems: historyAddedItems.filter((_, i) => i !== item.originalIndex) })} className="btn-delete">
-                          <TrashIcon /> 削除
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ))}
-                <div style={{ textAlign: 'center', marginTop: '35px' }}>
-                  <button onClick={handleHistoryBatchSubmit} className="btn-primary btn-batch-submit">全てまとめて登録</button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
+        <div className="new-submit-area">
+          <button 
+            onClick={handleHistoryItemSubmit} 
+            className="new-btn-primary new-btn-submit" 
+            disabled={!historyItem.name || !historyItem.genre || (parseInt(historyItem.quantity) || 0) <= 0}
+          >
+            ＋ 項目を追加リストへ
+          </button>
+        </div>
+        {historyAddedItems.length > 0 && (
+          <div className="new-added-list">
+            <h4 className="new-added-list-title">履歴追加予定の商品 ({historyAddedItems.length}件)</h4>
+            <div className="new-added-list-container">
+              {Object.entries(groupedHistoryItems).map(([genre, items]) => (
+                <div key={genre} className="new-genre-group">
+                  <div className="new-genre-group-title secondary">{genre}</div>
+                  {(items as Array<Item & { originalIndex: number }>).map((item) => (
+                    <div key={item.originalIndex} className="new-item-card">
+                      <div className="new-item-info">
+                        <span className="new-item-name">{item.name}</span>
+                        <span className="new-item-quantity">({item.quantity}個)</span>
+                      </div>
+                      <button 
+                        onClick={() => updateNewFormState({ historyAddedItems: historyAddedItems.filter((_, i) => i !== item.originalIndex) })} 
+                        className="new-btn-delete"
+                      >
+                        <TrashIcon /> 削除
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ))}
+              <div className="new-batch-submit-area">
+                <button onClick={handleHistoryBatchSubmit} className="new-btn-primary new-btn-batch-submit">
+                  全てまとめて登録
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    );
-  }
-  
-  export default NewItemForm;
+    </div>
+  );
+}
+
+export default NewItemForm;

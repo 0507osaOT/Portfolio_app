@@ -1,0 +1,159 @@
+/* login.css */
+
+/* メインコンテナ */
+.login-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  overflow: auto;
+}
+
+/* ログインカード */
+.login-card {
+  background-color: #fff;
+  border-radius: 20px;
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.1);
+  padding: 60px 80px;
+  width: 100%;
+  max-width: 600px;
+  margin: 40px;
+}
+
+/* タイトル */
+.login-title {
+  font-size: 47px;
+  font-weight: bold;
+  text-align: center;
+  color: #333;
+  margin-bottom: 50px;
+  text-decoration: underline;
+}
+
+/* フォームコンテナ */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* 入力フィールドグループ */
+.login-field {
+  /* フィールド全体のスタイル */
+}
+
+/* ラベル */
+.login-label {
+  display: block;
+  font-size: 23px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+/* 入力フィールド */
+.login-input {
+  width: 100%;
+  padding: 18px 24px;
+  border: 2px solid #ddd;
+  border-radius: 13px;
+  font-size: 21px;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.login-input:focus {
+  border-color: #007bff;
+}
+
+/* エラーメッセージ */
+.login-error {
+  background-color: #fef2f2;
+  color: #dc2626;
+  padding: 20px;
+  border-radius: 13px;
+  font-size: 18px;
+  border: 2px solid #fee2e2;
+}
+
+/* 送信ボタン */
+.login-submit-button {
+  width: 100%;
+  background-color: #007bff;
+  color: white;
+  padding: 20px;
+  border-radius: 13px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  font-size: 26px;
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+  transition: all 0.2s ease;
+}
+
+.login-submit-button:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+.login-submit-button:active {
+  transform: translateY(0);
+}
+
+/* トグルセクション */
+.login-toggle-section {
+  margin-top: 40px;
+  text-align: center;
+}
+
+/* トグルボタン */
+.login-toggle-button {
+  color: #007bff;
+  font-size: 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.login-toggle-button:hover {
+  color: #0056b3;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+  .login-card {
+    padding: 40px 30px;
+    margin: 20px;
+  }
+
+  .login-title {
+    font-size: 36px;
+    margin-bottom: 30px;
+  }
+
+  .login-label {
+    font-size: 20px;
+  }
+
+  .login-input {
+    padding: 15px 20px;
+    font-size: 18px;
+  }
+
+  .login-submit-button {
+    padding: 18px;
+    font-size: 22px;
+  }
+
+  .login-toggle-button {
+    font-size: 16px;
+  }
+}

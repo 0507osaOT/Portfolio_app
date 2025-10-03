@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import './calendar.css';
 
 interface Event {
   id: string;
@@ -295,87 +296,37 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
   const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
 
   return (
-    <div style={{ width: '100%', maxWidth: '1200px' }}>
+    <div className="calendar-main-container">
       {/* ホームに戻るボタンを追加 */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '30px'
-      }}>
-        <button
-          onClick={onBack}
-          style={{
-            padding: '12px 24px',
-            backgroundColor: '#6c757d',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '18px',
-            fontWeight: 'bold'
-          }}
-        >
+      <div className="calendar-header">
+        <button onClick={onBack} className="calendar-back-button">
           ← ホームに戻る
         </button>
-        <h2 style={{
-          fontSize: '36px',
-          fontWeight: 'bold',
-          margin: 0,
-          color: '#333'
-        }}>カレンダー</h2>
-        <div style={{ width: '140px' }}></div>
+        <h2 className="calendar-title">カレンダー</h2>
+        <div className="calendar-spacer"></div>
       </div>
 
       {/* カレンダーコンテナ */}
-      <div style={{
-        backgroundColor: '#fff',
-        padding: '30px',
-        borderRadius: '20px',
-        boxShadow: '0 5px 16px rgba(0, 0, 0, 0.1)'
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '30px',
-          flexWrap: 'wrap',
-          gap: '15px'
-        }}>
-          <h2 style={{ fontSize: '28px', margin: 0, color: '#333' }}>カレンダー</h2>
+      <div className="calendar-container">
+        <div className="calendar-controls">
+          <h2>カレンダー</h2>
           
           {/* 検索フォーム */}
-          <div className="search-container" style={{ position: 'relative', flex: '1', minWidth: '250px', maxWidth: '400px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="search-container">
+            <div className="search-input-wrapper">
               <input
                 type="text"
                 value={searchTerm}
                 onChange={handleSearchChange}
                 onFocus={handleSearchFocus}
                 placeholder="Todoを検索 (曖昧検索対応)"
-                style={{
-                  flex: 1,
-                  padding: '10px 15px',
-                  fontSize: '16px',
-                  border: '2px solid #ddd',
-                  borderRadius: '8px',
-                  outline: 'none'
-                }}
+                className="search-input"
               />
               {searchTerm && (
                 <button
                   onClick={clearSearch}
                   type="button"
-                  style={{
-                    padding: '10px 12px',
-                    backgroundColor: '#dc3545',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '16px',
-                    fontWeight: 'bold'
-                  }}
+                  className="search-clear-button"
                 >
                   ×
                 </button>
@@ -384,135 +335,58 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
             
             {/* 検索結果 */}
             {showSearchResults && (
-              <div className="search-results" style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                backgroundColor: 'white',
-                border: '1px solid #ddd',
-                borderRadius: '8px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                zIndex: 1000,
-                marginTop: '4px'
-              }}>
-                <div style={{
-                  padding: '12px',
-                  borderBottom: '1px solid #eee',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  color: '#666'
-                }}>
+              <div className="search-results">
+                <div className="search-results-header">
                   検索結果: {filteredEvents.length}件
                 </div>
                 {filteredEvents.length > 0 ? (
-                  <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                  <div className="search-results-list">
                     {filteredEvents.map((event) => (
                       <div
                         key={event.id}
                         onClick={() => handleSearchResultClick(event)}
-                        style={{
-                          padding: '12px',
-                          cursor: 'pointer',
-                          borderBottom: '1px solid #f0f0f0'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                        className="search-result-item"
                       >
-                        <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '4px' }}>{event.title}</div>
-                        <div style={{ fontSize: '14px', color: '#666', marginBottom: '2px' }}>{event.date}</div>
+                        <div className="search-result-title">{event.title}</div>
+                        <div className="search-result-date">{event.date}</div>
                         {event.description && (
-                          <div style={{ fontSize: '12px', color: '#999' }}>{event.description}</div>
+                          <div className="search-result-description">{event.description}</div>
                         )}
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div style={{ padding: '12px', color: '#999', textAlign: 'center' }}>検索結果が見つかりません</div>
+                  <div className="search-no-results">検索結果が見つかりません</div>
                 )}
               </div>
             )}
           </div>
           
-          <button 
-            onClick={handleTodayClick}
-            type="button"
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: 'bold'
-            }}
-          >
+          <button onClick={handleTodayClick} type="button" className="today-button">
             今日
           </button>
         </div>
 
         {/* カレンダーヘッダー */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '20px'
-        }}>
-          <button
-            onClick={prevMonth}
-            style={{
-              padding: '10px 15px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '18px'
-            }}
-          >
+        <div className="calendar-navigation">
+          <button onClick={prevMonth} className="calendar-nav-button">
             ←
           </button>
-          <h3 style={{ fontSize: '24px', margin: 0, color: '#333' }}>
+          <h3 className="calendar-month-title">
             {formatDate(currentDate)}
           </h3>
-          <button
-            onClick={nextMonth}
-            style={{
-              padding: '10px 15px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '18px'
-            }}
-          >
+          <button onClick={nextMonth} className="calendar-nav-button">
             →
           </button>
         </div>
 
         {/* カレンダーグリッド */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(7, 1fr)',
-          gap: '1px',
-          backgroundColor: '#ddd',
-          borderRadius: '8px',
-          overflow: 'hidden'
-        }}>
+        <div className="calendar-grid">
           {/* 曜日ヘッダー */}
           {weekdays.map((day, index) => (
             <div
               key={day}
-              style={{
-                padding: '12px',
-                backgroundColor: '#f8f9fa',
-                textAlign: 'center',
-                fontWeight: 'bold',
-                fontSize: '16px',
-                color: index === 0 ? '#dc3545' : index === 6 ? '#007bff' : '#333'
-              }}
+              className={`calendar-weekday ${index === 0 ? 'sunday' : index === 6 ? 'saturday' : ''}`}
             >
               {day}
             </div>
@@ -530,45 +404,18 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
             return (
               <div
                 key={index}
-                style={{
-                  padding: '8px',
-                  backgroundColor: day ? '#fff' : '#f8f9fa',
-                  textAlign: 'center',
-                  minHeight: '100px',
-                  position: 'relative',
-                  cursor: day ? 'pointer' : 'default',
-                  border: isToday ? '3px solid #007bff' : 'none',
-                  boxSizing: 'border-box',
-                  display: 'flex',
-                  flexDirection: 'column'
-                }}
+                className={`calendar-day-cell ${!day ? 'empty' : ''} ${isToday ? 'today' : ''}`}
                 onClick={() => day && handleDateClick(day)}
               >
                 {day && (
                   <>
-                    <span style={{
-                      fontWeight: isToday ? 'bold' : 'normal',
-                      color: isToday ? '#007bff' : '#333',
-                      fontSize: '16px',
-                      marginBottom: '4px'
-                    }}>
+                    <span className={`calendar-day-number ${isToday ? 'today' : ''}`}>
                       {day}
                     </span>
                     {dayEvents.slice(0, 3).map((event) => (
                       <div
                         key={event.id}
-                        style={{
-                          fontSize: '11px',
-                          padding: '2px 4px',
-                          backgroundColor: event.id.startsWith('item_') ? '#28a745' : '#007bff',
-                          color: 'white',
-                          borderRadius: '3px',
-                          marginBottom: '2px',
-                          textOverflow: 'ellipsis',
-                          overflow: 'hidden',
-                          whiteSpace: 'nowrap',
-                          cursor: 'pointer'
-                        }}
+                        className={`calendar-event ${event.id.startsWith('item_') ? 'item-event' : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleEventClick(event);
@@ -578,11 +425,7 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
                       </div>
                     ))}
                     {dayEvents.length > 3 && (
-                      <div style={{
-                        fontSize: '10px',
-                        color: '#666',
-                        fontWeight: 'bold'
-                      }}>
+                      <div className="calendar-more-events">
                         +{dayEvents.length - 3}件
                       </div>
                     )}
@@ -596,27 +439,9 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
 
       {/* タスク追加フォーム */}
       {showTaskForm && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '30px',
-            borderRadius: '12px',
-            width: '90%',
-            maxWidth: '500px',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
-          }}>
-            <h3 style={{ marginBottom: '20px', fontSize: '20px' }}>{selectedDate} にタスクを追加</h3>
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3 className="task-form-title">{selectedDate} にタスクを追加</h3>
             <input
               type="text"
               value={newTask}
@@ -624,65 +449,20 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
               onKeyPress={handleKeyPress}
               placeholder="タスクを入力してください"
               autoFocus
-              style={{
-                width: '100%',
-                padding: '12px',
-                fontSize: '16px',
-                border: '2px solid #ddd',
-                borderRadius: '8px',
-                marginBottom: '15px',
-                boxSizing: 'border-box',
-                outline: 'none'
-              }}
+              className="task-input"
             />
             <textarea
               value={newDescription}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewDescription(e.target.value)}
               placeholder="詳細説明（オプション）"
               rows={3}
-              style={{
-                width: '100%',
-                padding: '12px',
-                fontSize: '16px',
-                border: '2px solid #ddd',
-                borderRadius: '8px',
-                marginBottom: '20px',
-                boxSizing: 'border-box',
-                resize: 'vertical',
-                outline: 'none'
-              }}
+              className="task-textarea"
             />
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button 
-                onClick={handleAddTask} 
-                type="button"
-                style={{
-                  padding: '12px 24px',
-                  backgroundColor: '#007bff',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  fontWeight: 'bold'
-                }}
-              >
+            <div className="task-form-buttons">
+              <button onClick={handleAddTask} type="button" className="task-add-button">
                 追加
               </button>
-              <button 
-                onClick={handleCancel} 
-                type="button"
-                style={{
-                  padding: '12px 24px',
-                  backgroundColor: '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  fontWeight: 'bold'
-                }}
-              >
+              <button onClick={handleCancel} type="button" className="task-cancel-button">
                 キャンセル
               </button>
             </div>
@@ -692,64 +472,26 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
 
       {/* 詳細表示モーダル */}
       {showModal && modalContent && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '30px',
-            borderRadius: '12px',
-            width: '90%',
-            maxWidth: '600px',
-            maxHeight: '80vh',
-            overflowY: 'auto',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ fontSize: '24px', margin: 0, color: '#333' }}>{modalContent.date} の内容</h3>
-              <button
-                onClick={handleCloseModal}
-                style={{
-                  padding: '8px 12px',
-                  backgroundColor: '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  fontWeight: 'bold'
-                }}
-              >
+        <div className="modal-overlay">
+          <div className="modal-content large">
+            <div className="modal-header">
+              <h3 className="modal-date-title">{modalContent.date} の内容</h3>
+              <button onClick={handleCloseModal} className="modal-close-button">
                 ×
               </button>
             </div>
 
             {/* 手動追加されたイベント */}
             {modalContent.events.length > 0 && (
-              <div style={{ marginBottom: '30px' }}>
-                <h4 style={{ fontSize: '20px', color: '#007bff', marginBottom: '15px' }}>📅 手動追加したタスク</h4>
+              <div className="modal-section">
+                <h4 className="modal-section-title events">📅 手動追加したタスク</h4>
                 {modalContent.events.map((event) => (
-                  <div key={event.id} style={{
-                    backgroundColor: '#f8f9fa',
-                    padding: '15px',
-                    borderRadius: '8px',
-                    marginBottom: '10px',
-                    border: '1px solid #e9ecef'
-                  }}>
-                    <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px', color: '#333' }}>
+                  <div key={event.id} className="event-card">
+                    <div className="event-card-title">
                       {event.title}
                     </div>
                     {event.description && (
-                      <div style={{ fontSize: '14px', color: '#666', whiteSpace: 'pre-line' }}>
+                      <div className="event-card-description">
                         {event.description}
                       </div>
                     )}
@@ -761,7 +503,7 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
             {/* 商品データ */}
             {modalContent.items.length > 0 && (
               <div>
-                <h4 style={{ fontSize: '20px', color: '#28a745', marginBottom: '15px' }}>🛒 追加された商品</h4>
+                <h4 className="modal-section-title items">🛒 追加された商品</h4>
                 {(() => {
                   // ジャンル別にグループ化
                   const groupedItems = modalContent.items.reduce((acc, item) => {
@@ -773,60 +515,34 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
                   }, {} as Record<string, typeof modalContent.items>);
 
                   return Object.entries(groupedItems).map(([genre, items]) => (
-                    <div key={genre} style={{
-                      backgroundColor: '#f8f9fa',
-                      padding: '15px',
-                      borderRadius: '8px',
-                      marginBottom: '15px',
-                      border: '1px solid #e9ecef'
-                    }}>
-                      <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '12px', color: '#333' }}>
+                    <div key={genre} className="genre-group">
+                      <div className="genre-title">
                         ジャンル: {genre}
                       </div>
                       
                       {/* 商品を縦並びで表示、詳細は横並び */}
                       {items.map((item) => (
-                        <div key={item.id} style={{
-                          backgroundColor: 'white',
-                          padding: '15px',
-                          borderRadius: '8px',
-                          marginBottom: '10px',
-                          border: '1px solid #dee2e6'
-                        }}>
-                          <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px', color: '#333' }}>
+                        <div key={item.id} className="item-card">
+                          <div className="item-name">
                             {item.name}
                           </div>
                           
                           {/* 詳細情報を横並びで表示 */}
-                          <div style={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: '40px',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}>
-                            <div style={{ fontSize: '14px', color: '#666' }}>
+                          <div className="item-details">
+                            <div className="item-detail">
                               <strong>ジャンル:</strong> {item.genre}
                             </div>
-                            <div style={{ fontSize: '14px', color: '#666' }}>
+                            <div className="item-detail">
                               <strong>個数:</strong> {item.quantity}
                             </div>
-                            <div style={{ fontSize: '14px', color: '#666', display: 'flex', alignItems: 'center' }}>
+                            <div className="item-detail" style={{ display: 'flex', alignItems: 'center' }}>
                               <strong>種類:</strong>
-                              <span style={{
-                                padding: '2px 8px',
-                                borderRadius: '12px',
-                                fontSize: '12px',
-                                fontWeight: 'bold',
-                                marginLeft: '8px',
-                                backgroundColor: item.source === 'new' ? '#e3f2fd' : '#e8f5e8',
-                                color: item.source === 'new' ? '#1976d2' : '#388e3c'
-                              }}>
+                              <span className={`item-source-badge ${item.source === 'new' ? 'new' : 'history'}`}>
                                 {item.source === 'new' ? '新規' : '履歴'}
                               </span>
                             </div>
                             {item.barcode && (
-                              <div style={{ fontSize: '14px', color: '#666' }}>
+                              <div className="item-detail">
                                 <strong>バーコード:</strong> {item.barcode}
                               </div>
                             )}
@@ -840,7 +556,7 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
             )}
 
             {/* 新しいタスクを追加するボタン */}
-            <div style={{ textAlign: 'center', marginTop: '20px' }}>
+            <div className="modal-add-task-section">
               
             </div>
           </div>
