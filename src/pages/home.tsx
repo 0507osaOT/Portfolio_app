@@ -9,7 +9,9 @@ import './home.css';
 
 function Home() {
   const { currentUser, logout } = useAuth();
-  const [currentPage, setCurrentPage] = useState<'home' | 'new' | 'calendar' | 'stock'>('home');
+  
+  // ✅ currentPageをlocalStorageで永続化
+  const [currentPage, setCurrentPage] = useLocalStorage<'home' | 'new' | 'calendar' | 'stock'>('currentPage', 'home');
   
   const [allUserItems, setAllUserItems] = useLocalStorage<Record<string, Item[]>>('allUserItems', {});
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -36,6 +38,8 @@ function Home() {
     if (window.confirm('ログアウトしますか？')) {
       logout();
       setShowSettingsModal(false);
+      // ✅ ログアウト時にページをホームに戻す
+      setCurrentPage('home');
     }
   };
 

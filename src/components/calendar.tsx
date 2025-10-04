@@ -8,7 +8,6 @@ interface Event {
   description?: string;
 }
 
-// 商品の型定義（App.tsxから）
 interface Item {
   id: string;
   genre: string;
@@ -19,39 +18,48 @@ interface Item {
   source: 'new' | 'history';
 }
 
-// onBackプロパティとitemsプロパティを追加
 interface CalendarProps {
   onBack: () => void;
   items?: Item[];
 }
 
 const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
-  const [events, setEvents] = useState<Event[]>([
-    {
-      id: '1',
-      title: '会議',
-      date: '2024-12-05',
-      description: 'チーム会議'
-    },
-    {
-      id: '2',
-      title: 'プロジェクト',
-      date: '2024-12-06',
-      description: 'プロジェクト進捗確認'
-    },
-    {
-      id: '3',
-      title: '買い物',
-      date: '2024-12-07',
-      description: '食材の買い出し'
-    },
-    {
-      id: '4',
-      title: 'Todo',
-      date: '2024-12-08',
-      description: 'タスク整理'
+  const [events, setEvents] = useState<Event[]>(() => {
+    const savedEvents = localStorage.getItem('calendarEvents');
+    if (savedEvents) {
+      try {
+        return JSON.parse(savedEvents);
+      } catch (error) {
+        console.error('イベントの読み込みエラー:', error);
+      }
     }
-  ]);
+    return [
+      {
+        id: '1',
+        title: '会議',
+        date: '2024-12-05',
+        description: 'チーム会議'
+      },
+      {
+        id: '2',
+        title: 'プロジェクト',
+        date: '2024-12-06',
+        description: 'プロジェクト進捗確認'
+      },
+      {
+        id: '3',
+        title: '買い物',
+        date: '2024-12-07',
+        description: '食材の買い出し'
+      },
+      {
+        id: '4',
+        title: 'Todo',
+        date: '2024-12-08',
+        description: 'タスク整理'
+      }
+    ];
+  });
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -61,7 +69,6 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [showSearchResults, setShowSearchResults] = useState<boolean>(false);
   
-  // モーダル表示用の状態
   const [showModal, setShowModal] = useState<boolean>(false);
   const [modalContent, setModalContent] = useState<{
     date: string;
@@ -69,22 +76,23 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
     items: Item[];
   } | null>(null);
 
-  // 商品データをイベント形式に変換
+  useEffect(() => {
+    localStorage.setItem('calendarEvents', JSON.stringify(events));
+  }, [events]);
+
   const itemsAsEvents = useMemo(() => {
     return items.map(item => ({
       id: `item_${item.id}`,
       title: `${item.genre}: ${item.name}`,
-      date: item.addedDate.split('T')[0], // ISO文字列からYYYY-MM-DD形式に変換
+      date: item.addedDate.split('T')[0],
       description: `商品: ${item.name}\nジャンル: ${item.genre}\n個数: ${item.quantity}\n種類: ${item.source === 'new' ? '新規' : '履歴'}${item.barcode ? `\nバーコード: ${item.barcode}` : ''}`
     }));
   }, [items]);
 
-  // 全イベント（手動追加 + 商品データ）を統合
   const allEvents = useMemo(() => {
     return [...events, ...itemsAsEvents];
   }, [events, itemsAsEvents]);
 
-  // 曖昧検索機能（シンプル版）
   const filteredEvents = useMemo(() => {
     if (!searchTerm.trim()) {
       return allEvents;
@@ -106,7 +114,6 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
     }
   }, [allEvents, searchTerm]);
 
-  // 検索結果に基づいてカレンダーに表示するイベントを決定
   const displayEvents = useMemo(() => {
     try {
       if (!searchTerm.trim()) {
@@ -119,7 +126,6 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
     }
   }, [allEvents, filteredEvents, searchTerm]);
 
-  // 検索入力の処理
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       const value = e.target.value;
@@ -130,24 +136,18 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
     }
   };
 
-  // 検索結果をクリアする
   const clearSearch = () => {
     setSearchTerm('');
     setShowSearchResults(false);
   };
 
-  // 検索結果のイベントをクリック
   const handleSearchResultClick = (event: Event) => {
-    // 該当日付にカレンダーを移動（シンプル実装）
     const [year, month, day] = event.date.split('-').map(Number);
     setCurrentDate(new Date(year, month - 1, day));
-    // 検索結果を一時的に非表示
     setShowSearchResults(false);
-    // イベントの詳細を表示
     alert(`タスク: ${event.title}\n日付: ${event.date}\n詳細: ${event.description || 'なし'}`);
   };
 
-  // カレンダー表示用ユーティリティ
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('ja-JP', { 
       year: 'numeric', 
@@ -183,7 +183,6 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
     return items.filter(item => item.addedDate.split('T')[0] === dateStr);
   };
 
-  // 日付セルをクリックした時の処理（モーダル表示対応）
   const handleDateClick = (day: number): void => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -193,26 +192,22 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
     const dayItems = getItemsForDate(year, month, day);
     
     if (dayEvents.length > 0 || dayItems.length > 0) {
-      // その日にデータがある場合はモーダルを表示
       setModalContent({
         date: dateStr,
-        events: dayEvents.filter(event => !event.id.startsWith('item_')), // 手動追加イベントのみ
+        events: dayEvents.filter(event => !event.id.startsWith('item_')),
         items: dayItems
       });
       setShowModal(true);
     } else {
-      // その日にデータがない場合は新規タスク追加フォームを表示
       setSelectedDate(dateStr);
       setShowTaskForm(true);
     }
   };
 
-  // 今日ボタンのクリック処理
   const handleTodayClick = (): void => {
     setCurrentDate(new Date());
   };
 
-  // カレンダーナビゲーション
   const prevMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   };
@@ -221,7 +216,6 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
-  // タスクを追加
   const handleAddTask = (): void => {
     if (newTask.trim() && selectedDate) {
       const newEvent: Event = {
@@ -238,13 +232,34 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
     }
   };
 
-  // イベントをクリックした時の詳細画面表示
+  // ✅ タスクを削除（モーダル内で使用）
+  const handleDeleteEvent = (eventId: string): void => {
+    if (window.confirm('このタスクを削除しますか？')) {
+      setEvents(prevEvents => prevEvents.filter(event => event.id !== eventId));
+      
+      // モーダル内容を更新
+      if (modalContent) {
+        const updatedEvents = modalContent.events.filter(event => event.id !== eventId);
+        if (updatedEvents.length === 0 && modalContent.items.length === 0) {
+          // タスクも商品もなくなったらモーダルを閉じる
+          setShowModal(false);
+          setModalContent(null);
+        } else {
+          // モーダル内容を更新
+          setModalContent({
+            ...modalContent,
+            events: updatedEvents
+          });
+        }
+      }
+    }
+  };
+
   const handleEventClick = (event: Event): void => {
     const description = event.description || 'なし';
     alert(`タスク: ${event.title}\n日付: ${event.date}\n詳細: ${description}`);
   };
 
-  // フォームのキャンセル処理
   const handleCancel = (): void => {
     setShowTaskForm(false);
     setNewTask('');
@@ -252,27 +267,23 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
     setSelectedDate(null);
   };
 
-  // モーダルを閉じる処理
   const handleCloseModal = (): void => {
     setShowModal(false);
     setModalContent(null);
   };
 
-  // Enterキーでタスク追加
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === 'Enter') {
       handleAddTask();
     }
   };
 
-  // 検索フォーカス時の処理
   const handleSearchFocus = () => {
     if (searchTerm.trim().length > 0) {
       setShowSearchResults(true);
     }
   };
 
-  // 検索フォームの外側をクリックした時の処理
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const searchContainer = document.querySelector('.search-container');
@@ -297,7 +308,6 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
 
   return (
     <div className="calendar-main-container">
-      {/* ホームに戻るボタンを追加 */}
       <div className="calendar-header">
         <button onClick={onBack} className="calendar-back-button">
           ← ホームに戻る
@@ -306,12 +316,10 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
         <div className="calendar-spacer"></div>
       </div>
 
-      {/* カレンダーコンテナ */}
       <div className="calendar-container">
         <div className="calendar-controls">
           <h2>カレンダー</h2>
           
-          {/* 検索フォーム */}
           <div className="search-container">
             <div className="search-input-wrapper">
               <input
@@ -333,7 +341,6 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
               )}
             </div>
             
-            {/* 検索結果 */}
             {showSearchResults && (
               <div className="search-results">
                 <div className="search-results-header">
@@ -367,7 +374,6 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
           </button>
         </div>
 
-        {/* カレンダーヘッダー */}
         <div className="calendar-navigation">
           <button onClick={prevMonth} className="calendar-nav-button">
             ←
@@ -380,9 +386,7 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
           </button>
         </div>
 
-        {/* カレンダーグリッド */}
         <div className="calendar-grid">
-          {/* 曜日ヘッダー */}
           {weekdays.map((day, index) => (
             <div
               key={day}
@@ -392,7 +396,6 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
             </div>
           ))}
           
-          {/* 日付セル */}
           {days.map((day, index) => {
             const isToday = day && 
               currentDate.getFullYear() === today.getFullYear() &&
@@ -437,7 +440,6 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
         </div>
       </div>
 
-      {/* タスク追加フォーム */}
       {showTaskForm && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -470,7 +472,6 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
         </div>
       )}
 
-      {/* 詳細表示モーダル */}
       {showModal && modalContent && (
         <div className="modal-overlay">
           <div className="modal-content large">
@@ -481,14 +482,21 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
               </button>
             </div>
 
-            {/* 手動追加されたイベント */}
             {modalContent.events.length > 0 && (
               <div className="modal-section">
                 <h4 className="modal-section-title events">📅 手動追加したタスク</h4>
                 {modalContent.events.map((event) => (
                   <div key={event.id} className="event-card">
-                    <div className="event-card-title">
-                      {event.title}
+                    <div className="event-card-header">
+                      <div className="event-card-title">
+                        {event.title}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteEvent(event.id)}
+                        className="event-delete-button"
+                      >
+                        削除
+                      </button>
                     </div>
                     {event.description && (
                       <div className="event-card-description">
@@ -500,12 +508,10 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
               </div>
             )}
 
-            {/* 商品データ */}
             {modalContent.items.length > 0 && (
               <div>
                 <h4 className="modal-section-title items">🛒 追加された商品</h4>
                 {(() => {
-                  // ジャンル別にグループ化
                   const groupedItems = modalContent.items.reduce((acc, item) => {
                     if (!acc[item.genre]) {
                       acc[item.genre] = [];
@@ -520,14 +526,12 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
                         ジャンル: {genre}
                       </div>
                       
-                      {/* 商品を縦並びで表示、詳細は横並び */}
                       {items.map((item) => (
                         <div key={item.id} className="item-card">
                           <div className="item-name">
                             {item.name}
                           </div>
                           
-                          {/* 詳細情報を横並びで表示 */}
                           <div className="item-details">
                             <div className="item-detail">
                               <strong>ジャンル:</strong> {item.genre}
@@ -554,11 +558,6 @@ const Calendar: React.FC<CalendarProps> = ({ onBack, items = [] }) => {
                 })()}
               </div>
             )}
-
-            {/* 新しいタスクを追加するボタン */}
-            <div className="modal-add-task-section">
-              
-            </div>
           </div>
         </div>
       )}

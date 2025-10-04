@@ -450,11 +450,36 @@
   border: 1px solid #e9ecef;
 }
 
+/* ✅ タスクカードヘッダー（タイトルと削除ボタンを横並び） */
+.event-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
 .event-card-title {
   font-size: 18px;
   font-weight: bold;
-  margin-bottom: 8px;
   color: #333;
+  flex: 1;
+}
+
+/* ✅ 削除ボタンのスタイル */
+.event-delete-button {
+  padding: 6px 14px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.event-delete-button:hover {
+  background-color: #c82333;
 }
 
 .event-card-description {
